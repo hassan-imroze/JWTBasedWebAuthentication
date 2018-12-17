@@ -42,7 +42,18 @@ namespace JWTAthenticationAPI.Controllers
         {
             return await CreateHttpResponseAsync(Request, async () =>
             {
+                
                 return Request.CreateResponse(HttpStatusCode.OK, "This is secured");
+            });
+        }
+
+        [HttpGet]
+        [Route("GetIP")]
+        public async Task<HttpResponseMessage> GetIP()
+        {
+            return await CreateHttpResponseAsync(Request, async () =>
+            {
+                return Request.CreateResponse(HttpStatusCode.OK, "Your IP:"+ AuthenticationHandler.GetClientIPAddressHashed(Request));
             });
         }
     }

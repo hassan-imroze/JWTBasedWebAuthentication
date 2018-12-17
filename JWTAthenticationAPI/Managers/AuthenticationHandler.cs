@@ -5,7 +5,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Principal;
+using System.ServiceModel.Channels;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -104,5 +107,40 @@ namespace JWTAthenticationAPI.Managers
             return tsc.Task;
         }
 
+        public static string GetClientIPAddressHashed(HttpRequestMessage request)
+        {
+            string clientIPAddress = string.Empty;
+
+            if (request == null)
+            {
+                return clientIPAddress;
+            }
+
+            if (request.Properties.ContainsKey("MS_HttpContext"))
+            {
+                clientIPAddress = ((HttpContextWrapper)request.Properties["MS_HttpContext"]).Request.UserHostAddress;
+            }
+            else if (request.Properties.ContainsKey(RemoteEndpointMessageProperty.Name))
+            {
+                RemoteEndpointMessageProperty prop = (RemoteEndpointMessageProperty)request.Properties[RemoteEndpointMessageProperty.Name];
+                clientIPAddress = prop.Address;
+            }
+            else if (HttpContext.Current != null)
+            {
+                clientIPAddress = HttpContext.Current.Request.UserHostAddress;
+            }
+
+            return clientIPAddress;
+            //return string.IsNullOrWhiteSpace(clientIPAddress) ? string.Empty : Sha256encrypt(clientIPAddress);
+                   
+
+        }
+
+        public static string Sha256encrypt(string phrase)
+        {
+            UTF8Encoding encoder = new UTF8Encoding();
+            byte[] hashedDataBytes = new SHA256Managed().ComputeHash(encoder.GetBytes(phrase));
+            return Convert.ToBase64String(hashedDataBytes);
+        }
     }
 }
