@@ -23,14 +23,15 @@ namespace JWTAthenticationAPI.Models
         public int ExpireMinutes { get; set; }
         public Claim[] Claims { get; set; }
 
-        public static JWContainerModel GetJWTContainerModel(string name, string email)
+        public static JWContainerModel GetJWTContainerModel(string name, string email, string ipSecret)
         {
             return new JWContainerModel()
             {
                 Claims = new Claim[]
                 {
                     new Claim(ClaimTypes.Name, name),
-                    new Claim(ClaimTypes.Email, email)
+                    new Claim(ClaimTypes.Email, email),
+                    new Claim(ClaimTypes.SerialNumber,ipSecret)
                 }
             };
         }

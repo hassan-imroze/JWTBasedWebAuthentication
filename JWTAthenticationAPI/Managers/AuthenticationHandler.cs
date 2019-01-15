@@ -23,7 +23,7 @@ namespace JWTAthenticationAPI.Managers
             {
                 string token = GetTokenValue(request);
                 
-                if (TokenValid(token))
+                if (TokenValid(token,request))
                 {
                     InitializeObjects(request, token);
                 }
@@ -40,31 +40,25 @@ namespace JWTAthenticationAPI.Managers
             }
         }
 
-        private bool TokenValid(string token)
+        private bool TokenValid(string token, HttpRequestMessage request)
         {
+            bool isValid = false;
             IAuthService authService = new JWTService(new JWContainerModel().SecretKey);
-            return authService.IsTokenValid(token);
+
+            isValid = authService.IsTokenValid(token);
+            
+            if (isValid)
+            {
+                List<Claim> claims = authService.GetTokenClaims(token).ToList();
+                var ipHashed = claims.FirstOrDefault(e => e.Type.Equals(ClaimTypes.SerialNumber));
+                isValid = ipHashed != null && ipHashed.Value.Trim() == GetClientIPAddressHashed(request).Trim();
+            }
+            return isValid;
+
+            
         }
 
-        // OLD
-        //private void InitializeObjects(HttpRequestMessage oRequest, List<string> tokenValues)
-        //{
-        //    var membershipService = oRequest.GetMembershipService();
-        //    var membershipCtx = membershipService.ValidateUser(tokenValues[0], tokenValues[1]);
-        //    if (membershipCtx.User != null)
-        //    {
-        //        Ease.PPIC.BO.User.SetCurrentUser(membershipCtx.User);
-        //        IPrincipal principal = membershipCtx.Principal;
-        //        Thread.CurrentPrincipal = principal;
-        //        HttpContext.Current.User = principal;
-        //        HttpContext.Current.Items["CurrentUser"] = membershipCtx.User;
-        //    }
-        //    else
-        //    {
-        //        throw new Exception();
-        //    }
-        //}
-
+     
         private void InitializeObjects(HttpRequestMessage oRequest, string token)
         {
             IAuthService authService = new JWTService(new JWContainerModel().SecretKey);
@@ -132,8 +126,7 @@ namespace JWTAthenticationAPI.Managers
 
             return clientIPAddress;
             //return string.IsNullOrWhiteSpace(clientIPAddress) ? string.Empty : Sha256encrypt(clientIPAddress);
-                   
-
+            
         }
 
         public static string Sha256encrypt(string phrase)

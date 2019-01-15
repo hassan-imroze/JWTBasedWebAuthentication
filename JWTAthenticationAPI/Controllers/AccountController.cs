@@ -15,6 +15,7 @@ namespace JWTAthenticationAPI.Controllers
     {
         [HttpGet]
         [Route("Login")]
+        [AllowAnonymous]
         public async Task<HttpResponseMessage> Login(string UserID,string Password)
         {
             return await CreateHttpResponseAsync(Request,async () =>
@@ -22,7 +23,7 @@ namespace JWTAthenticationAPI.Controllers
                 string token = string.Empty;
                 if (UserID == "Hassan" && Password == "x")
                 {
-                    var model = await Task.Run(() => JWContainerModel.GetJWTContainerModel(UserID, "hassan@gmail.com"));
+                    var model = await Task.Run(() => JWContainerModel.GetJWTContainerModel(UserID, "hassan@gmail.com", AuthenticationHandler.GetClientIPAddressHashed(Request)));
                     IAuthService authService = new JWTService(model.SecretKey);
                     token = authService.GenerateToken(model);
                 }
@@ -36,7 +37,6 @@ namespace JWTAthenticationAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
         [Route("SecuredResource")]
         public async Task<HttpResponseMessage> Get()
         {
@@ -48,7 +48,6 @@ namespace JWTAthenticationAPI.Controllers
         }
 
         [HttpGet]
-        [Route("GetIP")]
         public async Task<HttpResponseMessage> GetIP()
         {
             return await CreateHttpResponseAsync(Request, async () =>
